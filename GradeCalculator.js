@@ -1,4 +1,6 @@
 var gradeElementList = [];
+var originalGradeValues = [];
+
 var item = document.getElementById("SegmentedGradeBucketAssignments_row0_col3");
 var overallGradeElement = document.getElementsByClassName("boldFont")[2];
 
@@ -11,10 +13,18 @@ for (var column = 1;; column++) {
         break;
     
     gradeElementList.push(item);
+	originalGradeValues[item.id] = item.innerText;
 }
 
+const assessmentRed = "rgb(255, 153, 153)";
+const assessmentBlueGreen = "rgb(153, 255, 255)";
+
+var bgColor;
+
 function determineAssignmentWeight(item) {
-    if (item.style.backgroundColor == "rgb(255, 153, 153)" || item.style.backgroundColor == "rgb(153, 255, 255)")
+	bgColor = item.style.backgroundColor;
+
+    if (bgColor == assessmentRed || bgColor == assessmentBlueGreen)
 		return "assessment";
     else
         return "practice";
@@ -58,15 +68,44 @@ function recalculateOverallGrade() {
     return parseFloat((assessmentAverage + practiceAverage).toFixed(2));
 }
 
-function promptValueAndRecalculate(elementId) {
+function promptActionAndRecalculate(elementId) {
     var target = document.getElementById(elementId);
+	var currentValue = target.innerText;
 
-    var newValue = parseFloat(prompt("New value: "));
+	if (currentValue == originalGradeValues[target.id]) {
+		do {
+			var choice = prompt("Please choose an action to perform: \n\nN = set a new value");
 
-    if (newValue != NaN) {
-        target.innerText = newValue.toFixed(2) + "%";
-    	overallGradeElement.innerText = recalculateOverallGrade() + "%";
-    }
+			if (choice == null) 
+				return;
+		} while (choice != "N");
+
+    	var newValue = parseFloat(prompt("New value: "));
+
+		if (newValue != NaN) {
+        	target.innerText = newValue.toFixed(2) + "%";
+    	}
+	} else {
+		do {
+			var choice = prompt("Please choose an action to perform: \n\nN = set a new value\nR = Reset to what this was before");
+
+			if (choice == null) 
+				return;
+		} while (choice != "N" && choice != "R");
+
+		if (choice == "N") {
+			var newValue = parseFloat(prompt("New value: "));
+
+			if (newValue != NaN) {
+        		target.innerText = newValue.toFixed(2) + "%";
+    			overallGradeElement.innerText = recalculateOverallGrade() + "%";
+    		}
+		} else if (choice == "R") {
+			target.innerText = originalGradeValues[target.id];
+		}
+	}
+
+	overallGradeElement.innerText = recalculateOverallGrade() + "%";
 }
 
 for (var item in gradeElementList) {
@@ -75,7 +114,7 @@ for (var item in gradeElementList) {
     if (current == null || current.style.backgroundColor != "")
         continue;
 
-    current.setAttribute("onclick", "promptValueAndRecalculate(this.id)");
+    current.setAttribute("onclick", "promptActionAndRecalculate(this.id)");
 }
 
 overallGradeElement.innerText = recalculateOverallGrade() + "%";
